@@ -1,0 +1,1 @@
+ALTER TABLE locations DROP CONSTRAINT locations_name_key;
