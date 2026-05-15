@@ -6,10 +6,8 @@ import dev.vivim.weatherviewer.exceptions.PasswordsNotMatchException;
 import dev.vivim.weatherviewer.exceptions.UserExistsException;
 import dev.vivim.weatherviewer.exceptions.UserNotFoundException;
 import dev.vivim.weatherviewer.model.User;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 
 import java.util.Optional;
 
@@ -17,10 +15,8 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final WeatherService weatherService;
-    public UserService(UserRepository userRepository, WeatherService weatherService) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.weatherService = weatherService;
     }
 
     /**
@@ -36,22 +32,6 @@ public class UserService {
         User newUser = new User(null, username, password);
         userRepository.save(newUser);
         return newUser;
-    }
-
-    /**
-     * GET method - отображение погоды пользователя или авторизация
-     */
-    public String onMainPage(HttpServletRequest request, Model model) {
-        User user = (User) request.getAttribute("user");
-        if (user != null) {
-            log.info("On main page, username={}", user.getLogin());
-            model.addAttribute("username", user.getLogin());
-            return weatherService.getUserWeathers(request, model);
-        }
-        else {
-            log.info("On main page, user is null!");
-            return "redirect:/sign-in";
-        }
     }
 
     /**

@@ -4,7 +4,6 @@ import dev.vivim.weatherviewer.model.Session;
 import dev.vivim.weatherviewer.model.User;
 import dev.vivim.weatherviewer.repository.SessionRepository;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -39,38 +38,15 @@ public class SessionsService {
         response.addCookie(cookie);
     }
 
-    public String logoutWithKillSession(HttpServletRequest request, HttpServletResponse response) {
-        String res = "redirect:/sign-in";
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) return res;
-
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("SESSION_ID")) {
-
-                String sessionId = cookie.getValue();
-                log.info("Logging out with session id {}", sessionId);
-
-                killSession(sessionId);
-                cookie.setValue("");
-                cookie.setPath("/");
-                cookie.setMaxAge(0);
-
-                response.addCookie(cookie);
-                return res;
-            }
-        }
-        return res;
+    public void logoutWithKillSession(String sessionId) {
+        log.info("Logging out with session id {}", sessionId);
+        sessionRepository.deleteById(UUID.fromString(sessionId));
     }
 
     public Optional<Session> getValidSession(String sessionIdString) {
         UUID sessionId = UUID.fromString(sessionIdString);
         LocalDateTime now = LocalDateTime.now();
         return sessionRepository.getValidSession(sessionId, now);
-    }
-
-    private void killSession(String sessionIdString) {
-        UUID sessionId = UUID.fromString(sessionIdString);
-        sessionRepository.deleteById(sessionId);
     }
 
     @Scheduled(fixedRate = 3600000)
