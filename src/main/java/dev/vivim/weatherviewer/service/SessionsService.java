@@ -3,8 +3,6 @@ package dev.vivim.weatherviewer.service;
 import dev.vivim.weatherviewer.model.Session;
 import dev.vivim.weatherviewer.model.User;
 import dev.vivim.weatherviewer.repository.SessionRepository;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,18 +22,13 @@ public class SessionsService {
         this.sessionRepository = sessionRepository;
     }
 
-    public void newSession(User user, HttpServletResponse response) {
+    public String newSession(User user) {
         UUID sessionId = UUID.randomUUID();
         Session session = new Session(sessionId, user, LocalDateTime.now().plusHours(1));
         sessionRepository.save(session);
 
         log.info("Creating session with id {}", sessionId);
-
-        Cookie cookie = new Cookie("SESSION_ID", sessionId.toString());
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(3600);
-        response.addCookie(cookie);
+        return sessionId.toString();
     }
 
     public void logoutWithKillSession(String sessionId) {

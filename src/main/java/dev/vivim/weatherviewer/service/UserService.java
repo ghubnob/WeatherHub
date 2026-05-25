@@ -21,7 +21,7 @@ public class UserService {
 
     /**
      * POST - регистрация
-     * @return UUID новой активной сессии
+     * @return созданный User
      */
     public User registerNewUser(String username, String password, String repeatPassword) {
         if (!password.equals(repeatPassword)) throw new PasswordsNotMatchException("Passwords do not match");
@@ -29,14 +29,14 @@ public class UserService {
         Optional<User> user = userRepository.findByLogin(username);
         if (user.isPresent()) throw new UserExistsException("User already exists");
 
-        User newUser = new User(null, username, password);
+        User newUser = new User(username, password);
         userRepository.save(newUser);
         return newUser;
     }
 
     /**
      * POST - авторизация
-     * @return UUID новой активной сессии
+     * @return полученный User
      */
     public User authenticate(String username, String password) {
         log.debug("Authenticating user {}", username);

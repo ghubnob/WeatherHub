@@ -28,9 +28,9 @@ public class WeatherService {
 
     private static final double EPSILON = 1e-6;
 
-    public WeatherService(LocationRepository locationRepository, WeatherProperties weatherProperties) {
+    public WeatherService(LocationRepository locationRepository, RestTemplate restTemplate, WeatherProperties weatherProperties) {
         this.locationRepository = locationRepository;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
         this.weatherProperties = weatherProperties;
 
         cache = new ConcurrentHashMap<>();
@@ -41,9 +41,9 @@ public class WeatherService {
     }
 
     /**
-     * GET method - получаем объекты погоды и кладем их в модель
+     * GET method - получаем объекты погоды
      */
-    public List<OpenWeatherSearchResponse> getWeathersSearch(String inputCity) {
+    public List<OpenWeatherSearchResponse> getListSearchLocations(String inputCity) {
         OpenWeatherSearchResponse[] responses = restTemplate.getForObject(weatherProperties.getApiUrlCities(), OpenWeatherSearchResponse[].class, inputCity, weatherProperties.getApiKey());
         if (responses == null || responses.length == 0) return List.of();
         log.info("Found {} cities with name {}", responses.length, inputCity);
@@ -56,7 +56,7 @@ public class WeatherService {
      * @param request DTO со всеми данными необходимыми локации
      */
     public void addNewLocation(WeatherLocationRequest request, User user) {
-        Location location = new Location(null, request.locationName(), user, request.latitude(), request.longitude());
+        Location location = new Location(request.locationName(), user, request.latitude(), request.longitude());
         for (Location loc : locationRepository.findUserLocations(user.getId())) {
             // Не допускаем дубликаты локаций - сравниваем через эпсилон (double типы плохо сравниваются а id получить пока не можем)
             if (Math.abs(loc.getLatitude() - location.getLatitude()) < EPSILON

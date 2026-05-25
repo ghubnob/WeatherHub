@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
@@ -71,11 +72,22 @@ public class MainController {
         try {
             log.info("Trying to register new user: {}", form.login());
             User user = userService.registerNewUser(form.login(), form.password(), form.repeatPassword());
-            sessionsService.newSession(user, response);
+            String sessionId = sessionsService.newSession(user);
+
+            Cookie cookie = new Cookie("SESSION_ID", sessionId);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(3600);
+            response.addCookie(cookie);
+
             return "redirect:/";
         }
-        catch (UserExistsException | PasswordsNotMatchException e) {
-            model.addAttribute("error", e);
+        catch (UserExistsException e) {
+            bindingResult.addError(new FieldError("user", "login", form.login(), false, null, null, e.getMessage()));
+            return "/sign-up";
+        }
+        catch (PasswordsNotMatchException e) {
+            model.addAttribute("passwordError", e.getMessage());
             return "/sign-up";
         }
     }
@@ -98,10 +110,17 @@ public class MainController {
         try {
             log.info("Logging in user: {}", form.username());
             User user = userService.authenticate(form.username(), form.password());
-            sessionsService.newSession(user, response);
+            String sessionId = sessionsService.newSession(user);
+
+            Cookie cookie = new Cookie("SESSION_ID", sessionId);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(3600);
+            response.addCookie(cookie);
+
             return "redirect:/";
         } catch (UserNotFoundException | FailedAuthenticationException e) {
-            model.addAttribute("error", e);
+            model.addAttribute("loginError", e.getMessage());
             return "/sign-in";
         }
     }
@@ -130,7 +149,7 @@ public class MainController {
         model.addAttribute("username", userOpt.get().getLogin());
         log.info("User {} finding locations", userOpt.get().getLogin());
 
-        model.addAttribute("response", weatherService.getWeathersSearch(name));
+        model.addAttribute("response", weatherService.getListSearchLocations(name));
         return "/search-results";
     }
 

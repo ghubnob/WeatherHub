@@ -24,7 +24,7 @@
                     <label for="username" class="form-label">Username</label>
                     <input type="text" th:field="*{login}" class="form-control"
                            th:classappend="${#fields.hasErrors('login')} ? 'is-invalid'" id="username" required>
-                    <div class="invalid-feedback" th:if="${#fields.hasErrors('login')}" th:errors="*login{}"></div>
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
                 </div>
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
